@@ -17,14 +17,14 @@ class Board {
     this.grid = grid;
     this.pieceTypes = [I];
     this.fallenPieces = [];
+    this.currentPiece = this.sample();
 
-    let CurrentPiece = this.pieceTypes.sample();
-    this.currentPiece = new CurrentPiece;
+    this.sample = this.sample.bind(this);
     this.allPieces = this.allPieces.bind(this);
     this.update = this.update.bind(this);
     this.maybeStop = this.maybeStop.bind(this);
-    this.sample = this.sample.bind(this);
     this.clearCurrentPieceTiles = this.clearCurrentPieceTiles.bind(this);
+    this.validCoords = this.validCoords.bind(this);
   }
 
   allPieces () {
@@ -88,6 +88,25 @@ class Board {
 
   moveLeft () {
     debugger;
+    let newCoords = this.currentPiece.coords.map(coord => [coord[0], coord[1] - 1]);
+    let that = this;
+    if (this.validCoords(newCoords)) {
+      that.clearCurrentPieceTiles();
+      that.currentPiece.coords = newCoords;
+    }
+  }
+
+  validCoords(coords) {
+    let result = true;
+    let grid = this.grid;
+    coords.forEach(coord => {
+      if (coord[1] < 0 || coord[1] > 9) {
+        result = false;
+      } else if (grid[coord[0]][coord[1]].className !== '') {
+        result = false;
+      }
+    });
+    return result;
   }
 
   sample () {

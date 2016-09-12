@@ -16,8 +16,12 @@ class TetrisView {
           break;
         case 'p':
           window.clearInterval(this.timerId);
+          break;
         case 'ArrowLeft':
           this.board.moveLeft();
+          this.board.update();
+          this.render();
+          break;
         default:
           return;
       }
@@ -29,7 +33,7 @@ class TetrisView {
       this.board.update();
       this.render();
       this.board.fall();
-    }, 100);
+    }, 5000);
   }
 
   render () {
