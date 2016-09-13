@@ -29,7 +29,9 @@ export const lowestYCoords = piece => {
 export const moveSquareDown = (grid, pos, numPositionsDown) => {
   let className = grid[pos[0]][pos[1]].className;
   grid[pos[0]][pos[1]].className = '';
-  grid[pos[0] + numPositionsDown][pos[1]].className = className;
+  let updatedTile = grid[pos[0] + numPositionsDown][pos[1]];
+  updatedTile.className = className;
+  return [updatedTile.i, updatedTile.j];
 }
 
 export const monkeyPatches = () => {
@@ -82,5 +84,77 @@ export const monkeyPatches = () => {
         return a.concat(b);
       }
     }, []);
+  }
+
+  Array.prototype.select = function (callback) {
+    let result = [];
+    this.forEach(el => {
+      if (callback(el)) {
+        result.push(el);
+      }
+    });
+
+    return result;
+  }
+
+  Array.prototype.uniq = function (callback) {
+    if (callback === undefined) {
+      callback = el => el;
+    }
+    let answer = [];
+    let callbackResults = [];
+    this.forEach(el => {
+      let callbackResult = callback(el);
+      if (!callbackResults.includes(callbackResult)) {
+        callbackResults.push(callbackResult);
+        answer.push(el);
+      }
+    });
+
+    return answer;
+  }
+
+  const merge = function (arr1, arr2, callback) {
+    if (callback === undefined) {
+      callback = function (x, y) {
+        if (x < y) {
+          return -1;
+        } else if (x === y) {
+          return 0;
+        } else {
+          return 1;
+        }
+      };
+    }
+
+    let result = [];
+    while ((arr1.length !== 0) && (arr2.length !== 0)) {
+      if (callback(arr1[0], arr2[0]) < 0) {
+        result.push(arr1.shift());
+      } else {
+        result.push(arr2.shift());
+      }
+    }
+
+    return result.concat(arr1).concat(arr2);
+  }
+
+  Array.prototype.mergeSort = function (callback) {
+    if (this.length <= 1) {
+      return this;
+    }
+
+    let half = Math.floor(this.length / 2);
+    let left = this.slice(0, half);
+    let right = this.slice(half);
+
+    let sortedLeft = left.mergeSort(callback);
+    let sortedRight = right.mergeSort(callback);
+
+    return merge(sortedLeft, sortedRight, callback);
+  };
+
+  Array.prototype.last = function () {
+    return this[this.length - 1];
   }
 }

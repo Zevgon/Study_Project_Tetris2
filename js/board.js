@@ -17,35 +17,83 @@ class Board {
     this.fallenCoords = [];
     this.grid = grid;
     this.pieceTypes = [I];
-    this.fallenPieces = [];
     this.currentPiece = this.sample();
 
     this.sample = this.sample.bind(this);
-    this.allPieces = this.allPieces.bind(this);
     this.update = this.update.bind(this);
     this.maybeStop = this.maybeStop.bind(this);
     this.clearCurrentPieceTiles = this.clearCurrentPieceTiles.bind(this);
     this.validCoords = this.validCoords.bind(this);
+    this.clearLines = this.clearLines.bind(this);
+    this.clearLine = this.clearLine.bind(this);
   }
 
-  allPieces () {
-    return this.fallenPieces.concat([this.currentPiece]);
+  clearLines () {
+    let yCoords = this.currentPiece.coords.map(coord => coord[0]).uniq();
+    let that = this;
+    let clearedYs = [];
+    yCoords.forEach(yCoord => {
+      let clear = !this.grid[yCoord].any(tile => tile.className === '');
+      if (clear) {
+        that.clearLine(yCoord);
+        let fallenCoords = that.fallenCoords;
+        for (let i = 0; i < fallenCoords.length; i++) {
+          if (fallenCoords[i][0] === yCoord) {
+            fallenCoords.splice(i, 1);
+            i -= 1;
+          }
+        }
+        clearedYs.push(yCoord);
+      }
+    });
+    if (clearedYs.length > 1) {
+      clearedYs = clearedYs.mergeSort();
+      let gapLines = [];
+      for (let i = clearedYs[0]; i < clearedYs.last(); i++) {
+        if (!clearedYs.includes(i)) {
+          gapLines.push(i);
+        }
+      }
+      let numDown = clearedYs.select(y => y > gapLines.last()).length;
+      let grid = this.grid;
+      gapLines.forEach(y => {
+        grid[y].forEach(tile => moveSquareDown(grid, [tile.i, tile.j], numDown));
+      });
+      let fallenCoords = this.fallenCoords;
+      fallenCoords.forEach((coord, idx) => {
+        if (coord[0] < clearedYs[0]) {
+          fallenCoords[idx] = moveSquareDown(grid, coord, clearedYs.length);
+        }
+      });
+    } else if (clearedYs.length === 1){
+      let grid = this.grid;
+      let fallenCoords = this.fallenCoords;
+      fallenCoords.forEach((coord, idx) => {
+        if (coord[0] < clearedYs[0]) {
+          fallenCoords[idx] = moveSquareDown(grid, coord, clearedYs.length);
+        }
+      });
+    }
+  }
+
+  clearLine (yCoord) {
+    let newRow = [];
+    this.grid[yCoord].forEach((tile, idx) => {
+      newRow.push(new Tile([yCoord, idx], ''));
+    });
+    this.grid[yCoord] = newRow;
+  }
+
+  sample () {
+    let Piece = this.pieceTypes.sample();
+    return new Piece;
   }
 
   update () {
     let grid = this.grid;
-    // this.allPieces().forEach(piece => {
-      this.currentPiece.coords.forEach(coord => {
-        grid[coord[0]][coord[1]].className = this.currentPiece.className;
-      });
-    // });
-
-
-
-    // let allPieceCoords = this.fallenCoords.concat(this.currentPiece.coords);
-    // allPieceCoords.forEach(coord => {
-    //   grid[coord[0]][coord[1]].className = piece.className;
-    // });
+    this.currentPiece.coords.forEach(coord => {
+      grid[coord[0]][coord[1]].className = this.currentPiece.className;
+    });
   }
 
   toString () {
@@ -92,14 +140,13 @@ class Board {
     });
 
     if (stop) {
-      this.fallenPieces.push(this.currentPiece);
       let that = this;
-      this.currentPiece.coords.forEach(coord => {
+      let sortedCoords = this.currentPiece.coords.mergeSort((coord1, coord2) => coord1[1] > coord2[1])
+      sortedCoords.forEach(coord => {
         that.fallenCoords.push(coord);
       });
+      this.clearLines();
       this.currentPiece = this.sample();
-      let func = moveSquareDown;
-      debugger;
     }
   }
 
@@ -146,11 +193,6 @@ class Board {
       }
     });
     return result;
-  }
-
-  sample () {
-    let Piece = this.pieceTypes.sample();
-    return new Piece;
   }
 
 }
