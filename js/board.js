@@ -4,6 +4,8 @@ import Brick from './brick';
 import RedZ from './red_z';
 import GreenZ from './green_z';
 import T from './t';
+import OrangeL from './orange_l';
+import BlueL from './blue_l';
 import { tileBelow, tileLeft, tileRight, lowestYCoords, monkeyPatches, moveSquareDown} from './util';
 monkeyPatches();
 
@@ -20,7 +22,7 @@ class Board {
 
     this.fallenCoords = [];
     this.grid = grid;
-    this.pieceTypes = [I, Brick, RedZ, GreenZ, T];
+    this.pieceTypes = [I, Brick, RedZ, GreenZ, T, OrangeL, BlueL];
     this.currentPiece = this.sample();
 
     this.sample = this.sample.bind(this);
