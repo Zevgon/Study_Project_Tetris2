@@ -1,6 +1,6 @@
 import Tile from './tile';
 import I from './i';
-import { tileBelow, tileLeft, tileRight, lowestYCoords, monkeyPatches} from './util';
+import { tileBelow, tileLeft, tileRight, lowestYCoords, monkeyPatches, moveSquareDown} from './util';
 monkeyPatches();
 
 class Board {
@@ -14,6 +14,7 @@ class Board {
       grid.push(row);
     }
 
+    this.fallenCoords = [];
     this.grid = grid;
     this.pieceTypes = [I];
     this.fallenPieces = [];
@@ -33,11 +34,18 @@ class Board {
 
   update () {
     let grid = this.grid;
-    this.allPieces().forEach(piece => {
-      piece.coords.forEach(coord => {
-        grid[coord[0]][coord[1]].className = piece.className;
+    // this.allPieces().forEach(piece => {
+      this.currentPiece.coords.forEach(coord => {
+        grid[coord[0]][coord[1]].className = this.currentPiece.className;
       });
-    });
+    // });
+
+
+
+    // let allPieceCoords = this.fallenCoords.concat(this.currentPiece.coords);
+    // allPieceCoords.forEach(coord => {
+    //   grid[coord[0]][coord[1]].className = piece.className;
+    // });
   }
 
   toString () {
@@ -63,15 +71,18 @@ class Board {
 
   clearCurrentPieceTiles () {
     let grid = this.grid;
-    this.currentPiece.coords.forEach(coord => {
-      grid[coord[0]][coord[1]] = new Tile([coord[0], coord[1]], '');
-    });
+    let execute = this.currentPiece.coords.any(coord => coord[0] >= 0);
+    if (execute) {
+      this.currentPiece.coords.forEach(coord => {
+        grid[coord[0]][coord[1]] = new Tile([coord[0], coord[1]], '');
+      });
+    }
   }
 
   maybeStop () {
     let stop = false;
     let that = this;
-    this.currentPiece.coords.forEach(coord => {
+    lowestYCoords(this.currentPiece).forEach(coord => {
       if (coord[0] === 19) {
         stop = true;
         return;
@@ -82,28 +93,56 @@ class Board {
 
     if (stop) {
       this.fallenPieces.push(this.currentPiece);
+      let that = this;
+      this.currentPiece.coords.forEach(coord => {
+        that.fallenCoords.push(coord);
+      });
       this.currentPiece = this.sample();
+      let func = moveSquareDown;
+      debugger;
     }
   }
 
   moveLeft () {
-    debugger;
     let newCoords = this.currentPiece.coords.map(coord => [coord[0], coord[1] - 1]);
-    let that = this;
     if (this.validCoords(newCoords)) {
-      that.clearCurrentPieceTiles();
-      that.currentPiece.coords = newCoords;
+      this.clearCurrentPieceTiles();
+      this.currentPiece.coords = newCoords;
+    }
+  }
+
+  moveRight () {
+    let newCoords = this.currentPiece.coords.map(coord => [coord[0], coord[1] + 1]);
+    if (this.validCoords(newCoords)) {
+      this.clearCurrentPieceTiles();
+      this.currentPiece.coords = newCoords;
+    }
+  }
+
+  rotateLeft () {
+    let newCoords = this.currentPiece.rotateLeftCoords();
+    if (this.validCoords(newCoords)) {
+      this.clearCurrentPieceTiles();
+      this.currentPiece.coords = newCoords;
+      this.currentPiece.executeRotationLeft(newCoords);
     }
   }
 
   validCoords(coords) {
     let result = true;
     let grid = this.grid;
+    let that = this;
     coords.forEach(coord => {
-      if (coord[1] < 0 || coord[1] > 9) {
+      if (that.currentPiece.coords.any(el => el[0] === coord[0] && el[1] === coord[1])) {
+        return;
+      } else if (coord[0] < 0 || coord[0] > 19) {
         result = false;
+      } else if (coord[1] < 0 || coord[1] > 9) {
+        result = false;
+        return;
       } else if (grid[coord[0]][coord[1]].className !== '') {
         result = false;
+        return;
       }
     });
     return result;

@@ -10,7 +10,7 @@ export const tileRight = (board, coord) => {
   return board.grid[coord[0]][coord[1] + 1];
 }
 
-export const lowestYCoords = (piece) => {
+export const lowestYCoords = piece => {
   let answer = [];
   piece.coords.forEach(coord => {
     if (answer.myIncludes(savedCoord => savedCoord[1] === coord[1])) {
@@ -24,6 +24,12 @@ export const lowestYCoords = (piece) => {
     }
   });
   return answer;
+}
+
+export const moveSquareDown = (grid, pos, numPositionsDown) => {
+  let className = grid[pos[0]][pos[1]].className;
+  grid[pos[0]][pos[1]].className = '';
+  grid[pos[0] + numPositionsDown][pos[1]].className = className;
 }
 
 export const monkeyPatches = () => {
@@ -40,5 +46,41 @@ export const monkeyPatches = () => {
     });
 
     return answer;
+  }
+
+  Array.prototype.any = function (callback) {
+    let answer;
+    this.forEach(el => {
+      if (callback(el)) {
+        answer = true;
+      } else if (!callback(el) && answer === undefined) {
+        answer = false;
+      }
+    });
+
+    return answer;
+  }
+
+  Array.prototype.inject = function (callback, acc) {
+    let idx = 0;
+    if (acc === undefined) {
+      acc = this[0];
+      idx += 1;
+    }
+    for (idx; idx < this.length; idx++) {
+      acc = callback(acc, this[idx]);
+    }
+
+    return acc;
+  };
+
+  Array.prototype.flatten = function () {
+    return this.inject((a, b) => {
+      if (b instanceof Array) {
+        return a.concat(b.flatten());
+      } else {
+        return a.concat(b);
+      }
+    }, []);
   }
 }

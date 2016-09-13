@@ -18,7 +18,18 @@ class TetrisView {
           window.clearInterval(this.timerId);
           break;
         case 'ArrowLeft':
+          let that = this;
           this.board.moveLeft();
+          this.board.update();
+          this.render();
+          break;
+        case 'ArrowRight':
+          this.board.moveRight();
+          this.board.update();
+          this.render();
+          break;
+        case 'z':
+          this.board.rotateLeft();
           this.board.update();
           this.render();
           break;
@@ -30,10 +41,10 @@ class TetrisView {
 
   play () {
     this.timerId = window.setInterval(() => {
+      this.board.fall();
       this.board.update();
       this.render();
-      this.board.fall();
-    }, 5000);
+    }, 100);
   }
 
   render () {
