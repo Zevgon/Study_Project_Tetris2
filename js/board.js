@@ -1,5 +1,9 @@
 import Tile from './tile';
 import I from './i';
+import Brick from './brick';
+import RedZ from './red_z';
+import GreenZ from './green_z';
+import T from './t';
 import { tileBelow, tileLeft, tileRight, lowestYCoords, monkeyPatches, moveSquareDown} from './util';
 monkeyPatches();
 
@@ -16,7 +20,7 @@ class Board {
 
     this.fallenCoords = [];
     this.grid = grid;
-    this.pieceTypes = [I];
+    this.pieceTypes = [I, Brick, RedZ, GreenZ, T];
     this.currentPiece = this.sample();
 
     this.sample = this.sample.bind(this);
@@ -36,13 +40,6 @@ class Board {
       let clear = !this.grid[yCoord].any(tile => tile.className === '');
       if (clear) {
         that.clearLine(yCoord);
-        let fallenCoords = that.fallenCoords;
-        for (let i = 0; i < fallenCoords.length; i++) {
-          if (fallenCoords[i][0] === yCoord) {
-            fallenCoords.splice(i, 1);
-            i -= 1;
-          }
-        }
         clearedYs.push(yCoord);
       }
     });
@@ -82,6 +79,12 @@ class Board {
       newRow.push(new Tile([yCoord, idx], ''));
     });
     this.grid[yCoord] = newRow;
+    for (let i = 0; i < this.fallenCoords.length; i++) {
+      if (this.fallenCoords[i][0] === yCoord) {
+        this.fallenCoords.splice(i, 1);
+        i -= 1;
+      }
+    }
   }
 
   sample () {
@@ -122,7 +125,9 @@ class Board {
     let execute = this.currentPiece.coords.any(coord => coord[0] >= 0);
     if (execute) {
       this.currentPiece.coords.forEach(coord => {
-        grid[coord[0]][coord[1]] = new Tile([coord[0], coord[1]], '');
+        if (coord[0] >= 0) {
+          grid[coord[0]][coord[1]] = new Tile([coord[0], coord[1]], '');
+        }
       });
     }
   }
